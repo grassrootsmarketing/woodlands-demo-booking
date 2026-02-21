@@ -283,6 +283,16 @@
                 <div class="booking-layout">
                     <div class="booking-card">
                         <div class="booking-card-header">
+                            <h3>Location</h3>
+                        </div>
+                        <div class="booking-card-body" style="padding: 16px 24px;">
+                            <div class="location-tabs" id="locationTabs" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button class="btn btn-small location-tab active" onclick="switchLocation('Kentfield')" data-location="Kentfield" style="border-radius: 20px;">Kentfield</button>
+                                <button class="btn btn-small location-tab" onclick="switchLocation('Tiburon')" data-location="Tiburon" style="border-radius: 20px; background: white; color: var(--forest-700); border: 1px solid var(--sand-300);">Tiburon</button>
+                                <button class="btn btn-small location-tab" onclick="switchLocation('San Francisco')" data-location="San Francisco" style="border-radius: 20px; background: white; color: var(--forest-700); border: 1px solid var(--sand-300);">San Francisco</button>
+                            </div>
+                        </div>
+                        <div class="booking-card-header" style="border-top: 1px solid var(--sand-200);">
                             <h3>Select Date & Time</h3>
                         </div>
                         <div class="booking-card-body">
@@ -485,8 +495,37 @@
             currentLocation = location;
             document.getElementById('headerLocation').textContent = location;
             document.getElementById('summaryLocation').textContent = location + ', CA';
+            updateLocationTabs();
             showView('client');
             renderCalendar();
+        }
+
+        function switchLocation(location) {
+            currentLocation = location;
+            document.getElementById('headerLocation').textContent = location;
+            document.getElementById('summaryLocation').textContent = location + ', CA';
+            selectedDate = null;
+            selectedTime = null;
+            document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
+            document.getElementById('selectedDateLabel').textContent = '';
+            updateLocationTabs();
+            renderCalendar();
+        }
+
+        function updateLocationTabs() {
+            document.querySelectorAll('.location-tab').forEach(tab => {
+                if (tab.dataset.location === currentLocation) {
+                    tab.style.background = 'var(--forest-600)';
+                    tab.style.color = 'white';
+                    tab.style.border = 'none';
+                    tab.classList.add('active');
+                } else {
+                    tab.style.background = 'white';
+                    tab.style.color = 'var(--forest-700)';
+                    tab.style.border = '1px solid var(--sand-300)';
+                    tab.classList.remove('active');
+                }
+            });
         }
         
         function renderCalendar() {
