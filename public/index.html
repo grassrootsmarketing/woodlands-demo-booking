@@ -461,11 +461,26 @@
         
         document.addEventListener('DOMContentLoaded', renderCalendar);
         
-        function showView(view) {
+        function showView(view, pushState = true) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(view + 'View').classList.add('active');
+            if (pushState) {
+                history.pushState({ view }, '', '#' + view);
+            }
         }
-        
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(e) {
+            if (e.state && e.state.view) {
+                showView(e.state.view, false);
+            } else {
+                showView('landing', false);
+            }
+        });
+
+        // Set initial history state
+        history.replaceState({ view: 'landing' }, '', '#landing');
+
         function selectLocation(location) {
             currentLocation = location;
             document.getElementById('headerLocation').textContent = location;
