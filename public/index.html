@@ -671,7 +671,12 @@
                     phone
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error('Server error (' + response.status + '): ' + text); });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.url) {
                     // Redirect to Stripe Checkout
@@ -681,8 +686,8 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Something went wrong. Please try again.');
+                console.error('Checkout error:', error);
+                alert('Error: ' + error.message);
                 checkoutBtn.disabled = false;
                 checkoutBtnText.textContent = 'Pay & Confirm – $' + (cart.length * PRICE_PER_DEMO).toFixed(2);
             });
