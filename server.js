@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const Stripe = require('stripe');
 const { Resend } = require('resend');
 
@@ -10,11 +11,11 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve success page
 app.get('/success', (req, res) => {
-  res.sendFile('success.html', { root: './public' });
+  res.sendFile('success.html', { root: path.join(__dirname, 'public') });
 });
 
 // Create Stripe Checkout Session
