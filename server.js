@@ -45,13 +45,27 @@ app.post('/api/create-checkout-session', async (req, res) => {
       success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/`,
       customer_email: customerEmail,
-      metadata: {
-        customerName,
-        company,
-        product,
-        phone,
-        bookings: JSON.stringify(cart),
-      },
+      metadata: (() => {
+        const meta = { customerName, company, product, phone };
+        const slim = cart.map(b => ({
+          date: b.date || b.dateStr,
+          time: b.time,
+          location: b.location,
+          displayDate: b.displayDate
+        }));
+        // Stripe metadata values max 500 chars — split across keys if needed
+        const bookingsStr = JSON.stringify(slim);
+        if (bookingsStr.length <= 500) {
+          meta.bookings = bookingsStr;
+        } else {
+          // Split into chunks across multiple metadata keys
+          for (let i = 0; i < bookingsStr.length; i += 500) {
+            meta[`bookings_${Math.floor(i / 500)}`] = bookingsStr.slice(i, i + 500);
+          }
+          meta.bookings_chunks = String(Math.ceil(bookingsStr.length / 500));
+        }
+        return meta;
+      })(),
     });
 
     res.json({ sessionId: session.id, url: session.url });
@@ -68,7 +82,18 @@ app.get('/api/verify-payment/:sessionId', async (req, res) => {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     
     if (session.payment_status === 'paid') {
-      const bookings = JSON.parse(session.metadata.bookings);
+      // Reassemble bookings from metadata (may be chunked)
+      let bookingsStr;
+      if (session.metadata.bookings) {
+        bookingsStr = session.metadata.bookings;
+      } else {
+        const chunks = parseInt(session.metadata.bookings_chunks || '0');
+        bookingsStr = '';
+        for (let i = 0; i < chunks; i++) {
+          bookingsStr += session.metadata[`bookings_${i}`] || '';
+        }
+      }
+      const bookings = JSON.parse(bookingsStr);
       const confirmationNumber = `WM-${Date.now().toString().slice(-8)}`;
       
       // Send confirmation email
