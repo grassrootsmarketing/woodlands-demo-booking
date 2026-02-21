@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Scheduling Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-900: #0d1f12; --forest-800: #1a3a21; --forest-700: #234d2c;
+            --forest-600: #2d6339; --forest-500: #3d8249; --forest-400: #52a35f;
+            --forest-300: #7bc285; --forest-200: #a8dab0; --forest-100: #d4edda; --forest-50: #eef7f0;
+            --sand-100: #faf8f5; --sand-200: #f2ede6; --sand-300: #e8e0d5;
+            --bark-600: #5c483a; --bark-500: #7a6352;
+            --shadow-sm: 0 1px 2px rgba(13,31,18,0.05); --shadow-md: 0 4px 12px rgba(13,31,18,0.08);
+            --shadow-lg: 0 12px 40px rgba(13,31,18,0.12); --shadow-xl: 0 24px 60px rgba(13,31,18,0.16);
+            --radius-sm: 6px; --radius-md: 12px; --radius-lg: 20px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body { font-family: 'Source Sans 3', sans-serif; background: var(--sand-100); color: var(--forest-900); line-height: 1.6; }
+        h1, h2, h3, h4 { font-family: 'Fraunces', Georgia, serif; font-weight: 500; line-height: 1.2; }
+        
+        .view { display: none; height: 100vh; overflow: hidden; }
+        .view.active { display: flex; flex-direction: column; }
+        
+        .landing { justify-content: flex-start; align-items: center; padding: 60px 40px; background: linear-gradient(135deg, var(--sand-100) 0%, var(--forest-50) 100%); overflow-y: auto; }
+        .landing-content { text-align: center; max-width: 800px; }
+        .landing-logo { width: 80px; height: 80px; background: linear-gradient(135deg, var(--forest-600), var(--forest-700)); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: var(--shadow-lg); }
+        .landing-logo svg { width: 44px; height: 44px; fill: white; }
+        .landing h1 { font-size: 2.5rem; color: var(--forest-800); margin-bottom: 8px; }
+        .landing > .landing-content > p { color: var(--bark-500); font-size: 1.1rem; margin-bottom: 48px; }
+        
+        .location-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px; }
+        .location-card { background: white; border-radius: var(--radius-md); padding: 32px; text-align: left; cursor: pointer; transition: all 0.3s; box-shadow: var(--shadow-md); border: 1px solid var(--sand-200); }
+        .location-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--forest-300); }
+        .location-card-icon { width: 56px; height: 56px; background: linear-gradient(135deg, var(--forest-600), var(--forest-800)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 1.25rem; color: white; margin-bottom: 16px; }
+        .location-card h3 { font-size: 1.25rem; color: var(--forest-800); margin-bottom: 4px; }
+        .location-card-location { display: flex; align-items: center; gap: 6px; color: var(--bark-500); font-size: 0.9rem; margin-bottom: 16px; }
+        .location-card-location svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+        .location-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--sand-200); }
+        .location-card-price { font-family: 'Fraunces', serif; font-size: 1.5rem; color: var(--forest-700); }
+        .location-card-price span { font-family: 'Source Sans 3', sans-serif; font-size: 0.85rem; color: var(--bark-500); }
+        
+        .admin-link { color: var(--forest-600); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s; }
+        .admin-link:hover { color: var(--forest-800); }
+        .admin-link svg { width: 18px; height: 18px; stroke: currentColor; fill: none; }
+        
+        .header { background: white; border-bottom: 1px solid var(--sand-200); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .brand:hover .brand-icon { transform: scale(1.05); }
+        .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--forest-600), var(--forest-700)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+        .brand-icon svg { width: 22px; height: 22px; fill: white; }
+        .brand-text h1 { font-size: 1.1rem; color: var(--forest-800); }
+        .brand-text span { font-size: 0.8rem; color: var(--bark-500); }
+        
+        .header-nav { display: flex; gap: 8px; }
+        .header-nav button { padding: 8px 16px; border: 1px solid var(--sand-300); background: white; border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; color: var(--forest-700); cursor: pointer; transition: all 0.2s; }
+        .header-nav button:hover { background: var(--forest-50); border-color: var(--forest-300); }
+        .header-nav button.active { background: var(--forest-600); color: white; border-color: var(--forest-600); }
+        
+        .main-scroll { flex: 1; overflow-y: auto; padding: 32px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .page-header { margin-bottom: 32px; }
+        .page-title { font-size: 1.75rem; color: var(--forest-800); margin-bottom: 4px; }
+        .page-subtitle { color: var(--bark-500); }
+        
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; font-family: inherit; }
+        .btn-primary { background: var(--forest-600); color: white; }
+        .btn-primary:hover { background: var(--forest-700); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .btn-secondary { background: white; color: var(--forest-700); border: 1px solid var(--sand-300); }
+        .btn-secondary:hover { background: var(--forest-50); border-color: var(--forest-300); }
+        .btn-small { padding: 8px 16px; font-size: 0.85rem; }
+        .btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+        
+        .booking-layout { display: grid; grid-template-columns: 1fr 380px; gap: 32px; align-items: start; }
+        .booking-card { background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-md); border: 1px solid var(--sand-200); overflow: hidden; }
+        .booking-card-header { padding: 20px 24px; border-bottom: 1px solid var(--sand-200); display: flex; justify-content: space-between; align-items: center; }
+        .booking-card-header h3 { font-size: 1.1rem; color: var(--forest-800); }
+        .booking-card-body { padding: 24px; }
+        
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-title { font-family: 'Fraunces', serif; font-size: 1rem; color: var(--forest-800); }
+        .calendar-nav { display: flex; gap: 4px; }
+        .calendar-nav button { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--sand-300); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .calendar-nav button:hover { background: var(--forest-50); border-color: var(--forest-300); }
+        .calendar-nav svg { width: 16px; height: 16px; stroke: var(--forest-700); fill: none; stroke-width: 2; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 24px; }
+        .calendar-day-name { text-align: center; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--bark-500); padding: 8px 4px; }
+        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .calendar-day:hover:not(.disabled):not(.empty) { background: var(--forest-50); border-color: var(--forest-300); }
+        .calendar-day.selected { background: var(--forest-600); color: white; }
+        .calendar-day.disabled { color: var(--sand-300); cursor: not-allowed; }
+        .calendar-day.empty { cursor: default; }
+        
+        .time-slots-label { font-size: 0.9rem; font-weight: 500; color: var(--forest-800); margin-bottom: 12px; }
+        .time-slots { display: flex; flex-direction: column; gap: 8px; }
+        .time-slot { padding: 14px 16px; border: 1px solid var(--sand-300); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .time-slot:hover { border-color: var(--forest-400); background: var(--forest-50); }
+        .time-slot.selected { border-color: var(--forest-600); background: var(--forest-600); color: white; }
+        .time-slot-time { font-weight: 600; }
+        .time-slot-duration { font-size: 0.85rem; opacity: 0.7; }
+        
+        .add-slot-btn { width: 100%; margin-top: 16px; justify-content: center; background: var(--forest-100); color: var(--forest-700); border: 2px dashed var(--forest-300); }
+        .add-slot-btn:hover { background: var(--forest-200); border-color: var(--forest-400); transform: none; box-shadow: none; }
+        
+        .summary-card { position: sticky; top: 0; }
+        .store-info { display: flex; gap: 16px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--sand-200); }
+        .store-logo { width: 56px; height: 56px; background: linear-gradient(135deg, var(--forest-600), var(--forest-800)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 1.25rem; color: white; flex-shrink: 0; }
+        .store-details h4 { font-size: 1rem; color: var(--forest-800); margin-bottom: 2px; }
+        .store-details p { font-size: 0.85rem; color: var(--bark-500); display: flex; align-items: center; gap: 4px; }
+        .store-details svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+        
+        /* Cart Items */
+        .cart-empty { text-align: center; padding: 24px; color: var(--bark-500); }
+        .cart-items { max-height: 240px; overflow-y: auto; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--sand-200); }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item-info { flex: 1; }
+        .cart-item-date { font-weight: 600; color: var(--forest-800); font-size: 0.95rem; }
+        .cart-item-time { font-size: 0.85rem; color: var(--bark-500); }
+        .cart-item-price { font-weight: 600; color: var(--forest-700); margin-right: 12px; }
+        .cart-item-remove { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--sand-200); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .cart-item-remove:hover { background: #fecaca; }
+        .cart-item-remove svg { width: 14px; height: 14px; stroke: var(--bark-600); }
+        .cart-item-remove:hover svg { stroke: #dc2626; }
+        
+        .summary-line { display: flex; justify-content: space-between; padding: 10px 0; font-size: 0.95rem; }
+        .summary-line.total { border-top: 1px solid var(--sand-200); margin-top: 8px; padding-top: 16px; font-weight: 600; font-size: 1.1rem; }
+        .summary-line span:first-child { color: var(--bark-500); }
+        .summary-line.total span { color: var(--forest-800); }
+        
+        .policy-notice { background: #fef3c7; border-radius: var(--radius-sm); padding: 12px 14px; margin: 20px 0; display: flex; gap: 10px; font-size: 0.85rem; color: #92400e; }
+        .policy-notice svg { width: 18px; height: 18px; stroke: #92400e; fill: none; flex-shrink: 0; margin-top: 1px; }
+        .book-btn { width: 100%; justify-content: center; padding: 14px 24px; font-size: 1rem; }
+        .book-btn:disabled { background: var(--sand-300); cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--forest-800); margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 10px 14px; border: 1px solid var(--sand-300); border-radius: var(--radius-sm); font-size: 0.95rem; font-family: inherit; transition: all 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--forest-500); box-shadow: 0 0 0 3px rgba(61,130,73,0.1); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+        .stat-card { background: white; border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--sand-200); }
+        .stat-label { font-size: 0.85rem; color: var(--bark-500); margin-bottom: 8px; }
+        .stat-value { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 600; color: var(--forest-800); }
+        .stat-change { font-size: 0.85rem; margin-top: 8px; color: var(--forest-600); }
+        
+        .table-card { background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--sand-200); overflow: hidden; }
+        .table-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--sand-200); }
+        .table-title { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--forest-800); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 14px 24px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--bark-500); background: var(--sand-100); font-weight: 600; }
+        td { padding: 16px 24px; border-top: 1px solid var(--sand-200); font-size: 0.95rem; }
+        tr:hover td { background: var(--forest-50); }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+        .status-confirmed { background: var(--forest-100); color: var(--forest-700); }
+        
+        .settings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .settings-card { background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--sand-200); }
+        .settings-card-header { padding: 20px 24px; border-bottom: 1px solid var(--sand-200); display: flex; justify-content: space-between; align-items: center; }
+        .settings-card-header h3 { font-size: 1rem; color: var(--forest-800); }
+        .settings-card-body { padding: 24px; }
+        
+        .availability-day { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--sand-200); }
+        .availability-day:last-child { border-bottom: none; }
+        .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--sand-300); border-radius: 12px; transition: all 0.3s; }
+        .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: all 0.3s; box-shadow: var(--shadow-sm); }
+        .toggle input:checked + .toggle-slider { background: var(--forest-500); }
+        .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+        .availability-day-name { width: 80px; font-weight: 500; color: var(--forest-800); font-size: 0.9rem; }
+        .availability-times { font-size: 0.9rem; color: var(--bark-500); }
+        
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(13,31,18,0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; border-radius: var(--radius-lg); max-width: 480px; width: 100%; box-shadow: var(--shadow-xl); max-height: 90vh; overflow-y: auto; }
+        .modal-body { padding: 40px; text-align: center; }
+        .success-icon { width: 72px; height: 72px; background: var(--forest-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+        .success-icon svg { width: 36px; height: 36px; stroke: var(--forest-600); fill: none; stroke-width: 2; }
+        .modal-body h3 { font-size: 1.5rem; color: var(--forest-800); margin-bottom: 8px; }
+        .modal-body > p { color: var(--bark-500); margin-bottom: 24px; }
+        .confirmation-details { background: var(--sand-100); border-radius: var(--radius-md); padding: 20px; text-align: left; margin-bottom: 24px; }
+        .confirmation-details .summary-line { padding: 8px 0; }
+        .confirmation-booking { background: white; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; border: 1px solid var(--sand-200); }
+        .confirmation-booking:last-child { margin-bottom: 0; }
+        
+        @media (max-width: 900px) {
+            .booking-layout { grid-template-columns: 1fr; }
+            .summary-card { position: static; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .settings-grid { grid-template-columns: 1fr; }
+            .location-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+            .header { padding: 12px 16px; }
+            .main-scroll { padding: 20px 16px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .landing { padding: 24px; }
+            .landing h1 { font-size: 1.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="view landing active" id="landingView">
+        <div class="landing-content">
+            <div class="landing-logo"><svg viewBox="0 0 24 24"><path d="M12 2L8 6H4v4l-4 4 4 4v4h4l4 4 4-4h4v-4l4-4-4-4V6h-4l-4-4z"/></svg></div>
+            <h1>Demo Scheduling Portal</h1>
+            <p>Select a location to book your product demonstration</p>
+            
+            <div class="location-grid">
+                <div class="location-card" onclick="selectLocation('Kentfield')">
+                    <div class="location-card-icon">WM</div>
+                    <h3>Woodlands Market</h3>
+                    <div class="location-card-location">
+                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Kentfield, CA
+                    </div>
+                    <div class="location-card-footer">
+                        <div class="location-card-price">$30 <span>/ demo</span></div>
+                        <span class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">Book Now</span>
+                    </div>
+                </div>
+                
+                <div class="location-card" onclick="selectLocation('Tiburon')">
+                    <div class="location-card-icon">WM</div>
+                    <h3>Woodlands Market</h3>
+                    <div class="location-card-location">
+                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Tiburon, CA
+                    </div>
+                    <div class="location-card-footer">
+                        <div class="location-card-price">$30 <span>/ demo</span></div>
+                        <span class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">Book Now</span>
+                    </div>
+                </div>
+                
+                <div class="location-card" onclick="selectLocation('San Francisco')">
+                    <div class="location-card-icon">WM</div>
+                    <h3>Woodlands Market</h3>
+                    <div class="location-card-location">
+                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        San Francisco, CA
+                    </div>
+                    <div class="location-card-footer">
+                        <div class="location-card-price">$30 <span>/ demo</span></div>
+                        <span class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">Book Now</span>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="#" class="admin-link" onclick="showView('admin'); return false;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Admin Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="view" id="clientView">
+        <header class="header">
+            <div class="brand" onclick="showView('landing')">
+                <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 2L8 6H4v4l-4 4 4 4v4h4l4 4 4-4h4v-4l4-4-4-4V6h-4l-4-4z"/></svg></div>
+                <div class="brand-text"><h1>Woodlands Market</h1><span id="headerLocation">Kentfield</span></div>
+            </div>
+            <div class="header-nav">
+                <button class="active">Book Demo</button>
+                <button onclick="showView('admin')">Admin</button>
+            </div>
+        </header>
+        <div class="main-scroll">
+            <div class="container">
+                <div class="page-header">
+                    <h2 class="page-title">Schedule Your Demos</h2>
+                    <p class="page-subtitle">Select dates and times, then add to your cart. Book multiple demos at once!</p>
+                </div>
+                <div class="booking-layout">
+                    <div class="booking-card">
+                        <div class="booking-card-header">
+                            <h3>Select Date & Time</h3>
+                        </div>
+                        <div class="booking-card-body">
+                            <div class="calendar-header">
+                                <span class="calendar-title" id="calendarMonth">February 2026</span>
+                                <div class="calendar-nav">
+                                    <button onclick="prevMonth()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+                                    <button onclick="nextMonth()"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid" id="calendarGrid"></div>
+                            <div class="time-slots-label">Available Time Slots <span id="selectedDateLabel" style="font-weight: 400; color: var(--bark-500);"></span></div>
+                            <div class="time-slots">
+                                <div class="time-slot" onclick="selectTime(this, '11:00 AM')">
+                                    <span class="time-slot-time">11:00 AM – 2:00 PM</span>
+                                    <span class="time-slot-duration">3 hours</span>
+                                </div>
+                                <div class="time-slot" onclick="selectTime(this, '3:00 PM')">
+                                    <span class="time-slot-time">3:00 PM – 6:00 PM</span>
+                                    <span class="time-slot-duration">3 hours</span>
+                                </div>
+                            </div>
+                            <button class="btn add-slot-btn" onclick="addToCart()">
+                                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                Add to Cart
+                            </button>
+                        </div>
+                        <div class="booking-card-header" style="border-top: 1px solid var(--sand-200);"><h3>Your Information</h3></div>
+                        <div class="booking-card-body">
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">First Name</label><input type="text" class="form-input" placeholder="John" id="firstName"></div>
+                                <div class="form-group"><label class="form-label">Last Name</label><input type="text" class="form-input" placeholder="Smith" id="lastName"></div>
+                            </div>
+                            <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-input" placeholder="john@company.com" id="email"></div>
+                            <div class="form-group"><label class="form-label">Phone Number</label><input type="tel" class="form-input" placeholder="(555) 123-4567" id="phone"></div>
+                            <div class="form-group"><label class="form-label">Company / Brand Name</label><input type="text" class="form-input" placeholder="Your company" id="company"></div>
+                            <div class="form-group"><label class="form-label">Product(s) for Demo</label><input type="text" class="form-input" placeholder="What will you be demonstrating?" id="product"></div>
+                        </div>
+                    </div>
+                    <div class="booking-card summary-card">
+                        <div class="booking-card-header">
+                            <h3>Your Cart</h3>
+                            <span id="cartCount" style="background: var(--forest-100); color: var(--forest-700); padding: 2px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">0</span>
+                        </div>
+                        <div class="booking-card-body">
+                            <div class="store-info">
+                                <div class="store-logo">WM</div>
+                                <div class="store-details">
+                                    <h4>Woodlands Market</h4>
+                                    <p><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="summaryLocation">Kentfield, CA</span></p>
+                                </div>
+                            </div>
+                            
+                            <div id="cartItems">
+                                <div class="cart-empty">No demos selected yet.<br>Pick a date and time above!</div>
+                            </div>
+                            
+                            <div class="summary-line"><span>Price per demo</span><span>$30.00</span></div>
+                            <div class="summary-line"><span>Number of demos</span><span id="demoCount">0</span></div>
+                            <div class="summary-line total"><span>Total</span><span id="totalPrice">$0.00</span></div>
+                            
+                            <div class="policy-notice">
+                                <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span>All bookings are final. No cancellations, edits, or refunds. Must book 14+ days in advance. <strong>Only one demo is allowed to be booked per location per day.</strong></span>
+                            </div>
+                            
+                            <button class="btn btn-primary book-btn" id="checkoutBtn" onclick="confirmBooking()" disabled>
+                                <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                                <span id="checkoutBtnText">Add demos to checkout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="view" id="adminView">
+        <header class="header">
+            <div class="brand" onclick="showView('landing')">
+                <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 2L8 6H4v4l-4 4 4 4v4h4l4 4 4-4h4v-4l4-4-4-4V6h-4l-4-4z"/></svg></div>
+                <div class="brand-text"><h1>Woodlands Market</h1><span>Admin Dashboard</span></div>
+            </div>
+            <div class="header-nav">
+                <button onclick="showView('client')">Book Demo</button>
+                <button class="active">Admin</button>
+            </div>
+        </header>
+        <div class="main-scroll">
+            <div class="container">
+                <div class="page-header">
+                    <h2 class="page-title">Dashboard</h2>
+                    <p class="page-subtitle">Manage your demo schedule and view earnings</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label">This Month's Demos</div><div class="stat-value">12</div><div class="stat-change">↑ 3 from last month</div></div>
+                    <div class="stat-card"><div class="stat-label">Your Revenue (80%)</div><div class="stat-value">$288</div><div class="stat-change">From $360 total</div></div>
+                    <div class="stat-card"><div class="stat-label">Platform Fee (20%)</div><div class="stat-value">$72</div></div>
+                    <div class="stat-card"><div class="stat-label">Demo Fee</div><div class="stat-value">$30</div></div>
+                </div>
+                <div class="table-card" style="margin-bottom: 32px;">
+                    <div class="table-header"><h3 class="table-title">Upcoming Demos</h3></div>
+                    <table>
+                        <thead><tr><th>Date & Time</th><th>Company</th><th>Contact</th><th>Product</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>Feb 16, 2026 • 11:00 AM</td><td>Sunrise Foods</td><td>John Smith</td><td>Organic Granola Line</td><td><span class="status-badge status-confirmed">Confirmed</span></td></tr>
+                            <tr><td>Feb 18, 2026 • 3:00 PM</td><td>Bay Beverages</td><td>Sarah Chen</td><td>Cold Brew Coffee</td><td><span class="status-badge status-confirmed">Confirmed</span></td></tr>
+                            <tr><td>Feb 20, 2026 • 11:00 AM</td><td>Green Valley Farms</td><td>Mike Johnson</td><td>Plant-Based Cheese</td><td><span class="status-badge status-confirmed">Confirmed</span></td></tr>
+                            <tr><td>Feb 22, 2026 • 3:00 PM</td><td>Artisan Crackers Co</td><td>Lisa Wong</td><td>Sourdough Crackers</td><td><span class="status-badge status-confirmed">Confirmed</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <div class="settings-card-header"><h3>Availability</h3><button class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;">Edit</button></div>
+                        <div class="settings-card-body">
+                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Monday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Tuesday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Wednesday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Thursday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Friday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                            <div class="availability-day"><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label><span class="availability-day-name">Saturday</span><div class="availability-times">Closed</div></div>
+                            <div class="availability-day"><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label><span class="availability-day-name">Sunday</span><div class="availability-times">Closed</div></div>
+                        </div>
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-card-header"><h3>Settings</h3></div>
+                        <div class="settings-card-body">
+                            <div class="form-group"><label class="form-label">Demo Fee</label><input type="text" class="form-input" value="$30.00"></div>
+                            <div class="form-group"><label class="form-label">Demo Duration</label><input type="text" class="form-input" value="3 hours" disabled></div>
+                            <div class="form-group"><label class="form-label">Advance Booking</label><input type="text" class="form-input" value="14 days minimum" disabled></div>
+                            <div class="form-group"><label class="form-label">Calendar Sync</label><button class="btn btn-secondary" style="width: 100%; justify-content: center;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>Connect Outlook</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="successModal">
+        <div class="modal">
+            <div class="modal-body">
+                <div class="success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <h3>Confirmed!</h3>
+                <p>Your demo booking has been confirmed. Add to your calendar below.</p>
+                <div class="confirmation-details" id="confirmationDetails">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                    <button class="btn btn-secondary" onclick="downloadICS()" style="width: 100%; justify-content: center;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Download Calendar File (.ics)
+                    </button>
+                    <button class="btn btn-secondary" onclick="addToGoogleCalendar()" style="width: 100%; justify-content: center;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+                        Add to Google Calendar
+                    </button>
+                    <button class="btn btn-secondary" onclick="addToOutlookCalendar()" style="width: 100%; justify-content: center;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Add to Outlook Calendar
+                    </button>
+                </div>
+                <button class="btn btn-primary" onclick="closeModal()" style="width: 100%; justify-content: center;">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedDate = null;
+        let selectedTime = null;
+        let currentMonth = 1;
+        let currentYear = 2026;
+        let currentLocation = 'Kentfield';
+        let cart = [];
+        const PRICE_PER_DEMO = 30;
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        
+        document.addEventListener('DOMContentLoaded', renderCalendar);
+        
+        function showView(view) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(view + 'View').classList.add('active');
+        }
+        
+        function selectLocation(location) {
+            currentLocation = location;
+            document.getElementById('headerLocation').textContent = location;
+            document.getElementById('summaryLocation').textContent = location + ', CA';
+            showView('client');
+            renderCalendar();
+        }
+        
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            document.getElementById('calendarMonth').textContent = months[currentMonth] + ' ' + currentYear;
+            const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            let html = dayNames.map(d => '<div class="calendar-day-name">' + d + '</div>').join('');
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            const minDate = new Date(today); minDate.setDate(today.getDate() + 14);
+            for (let i = 0; i < firstDay; i++) html += '<div class="calendar-day empty"></div>';
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const dow = date.getDay();
+                const disabled = date < minDate || dow === 0 || dow === 6;
+                const selected = selectedDate && selectedDate.getDate() === day && selectedDate.getMonth() === currentMonth && selectedDate.getFullYear() === currentYear;
+                html += '<div class="calendar-day' + (disabled ? ' disabled' : '') + (selected ? ' selected' : '') + '" onclick="selectDate(' + day + ',' + disabled + ')">' + day + '</div>';
+            }
+            grid.innerHTML = html;
+        }
+        
+        function prevMonth() { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); }
+        function nextMonth() { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar(); }
+        
+        function selectDate(day, disabled) {
+            if (disabled) return;
+            selectedDate = new Date(currentYear, currentMonth, day);
+            renderCalendar();
+            document.getElementById('selectedDateLabel').textContent = '- ' + selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        function selectTime(el, time) {
+            document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedTime = time;
+        }
+        
+        function addToCart() {
+            if (!selectedDate || !selectedTime) {
+                alert('Please select a date and time first');
+                return;
+            }
+            
+            // Check if this location already has a booking on this day
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            const existsOnDay = cart.find(item => item.dateStr === dateStr && item.location === currentLocation);
+            if (existsOnDay) {
+                alert('You can only book one slot per location per day. This location already has a booking on ' + selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                return;
+            }
+            
+            cart.push({
+                date: new Date(selectedDate),
+                dateStr: dateStr,
+                time: selectedTime,
+                location: currentLocation,
+                displayDate: selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            });
+            
+            // Reset selection
+            selectedTime = null;
+            document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
+            
+            updateCartDisplay();
+        }
+        
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+        }
+        
+        function updateCartDisplay() {
+            const cartContainer = document.getElementById('cartItems');
+            const cartCount = document.getElementById('cartCount');
+            const demoCount = document.getElementById('demoCount');
+            const totalPrice = document.getElementById('totalPrice');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            const checkoutBtnText = document.getElementById('checkoutBtnText');
+            
+            cartCount.textContent = cart.length;
+            demoCount.textContent = cart.length;
+            totalPrice.textContent = '$' + (cart.length * PRICE_PER_DEMO).toFixed(2);
+            
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '<div class="cart-empty">No demos selected yet.<br>Pick a date and time above!</div>';
+                checkoutBtn.disabled = true;
+                checkoutBtnText.textContent = 'Add demos to checkout';
+            } else {
+                let html = '<div class="cart-items">';
+                cart.forEach((item, index) => {
+                    html += '<div class="cart-item">' +
+                        '<div class="cart-item-info">' +
+                            '<div class="cart-item-date">' + item.displayDate + '</div>' +
+                            '<div class="cart-item-time">' + item.time + ' • ' + item.location + '</div>' +
+                        '</div>' +
+                        '<span class="cart-item-price">$30</span>' +
+                        '<button class="cart-item-remove" onclick="removeFromCart(' + index + ')">' +
+                            '<svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+                        '</button>' +
+                    '</div>';
+                });
+                html += '</div>';
+                cartContainer.innerHTML = html;
+                checkoutBtn.disabled = false;
+                checkoutBtnText.textContent = 'Pay & Confirm – $' + (cart.length * PRICE_PER_DEMO).toFixed(2);
+            }
+        }
+        
+        function confirmBooking() {
+            if (cart.length === 0) return;
+            
+            // Get customer info
+            const customerEmail = document.getElementById('email').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const company = document.getElementById('company').value;
+            const product = document.getElementById('product').value;
+            const phone = document.getElementById('phone').value;
+            
+            // Validate required fields
+            if (!customerEmail || !firstName || !lastName || !company || !product) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Show loading state
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            const checkoutBtnText = document.getElementById('checkoutBtnText');
+            checkoutBtn.disabled = true;
+            checkoutBtnText.textContent = 'Processing...';
+            
+            // Create Stripe checkout session
+            fetch('/api/create-checkout-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cart,
+                    customerEmail,
+                    customerName: firstName + ' ' + lastName,
+                    company,
+                    product,
+                    phone
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.url) {
+                    // Redirect to Stripe Checkout
+                    window.location.href = data.url;
+                } else {
+                    throw new Error(data.error || 'Failed to create checkout session');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Something went wrong. Please try again.');
+                checkoutBtn.disabled = false;
+                checkoutBtnText.textContent = 'Pay & Confirm – $' + (cart.length * PRICE_PER_DEMO).toFixed(2);
+            });
+        }
+        
+        function closeModal() { 
+            document.getElementById('successModal').classList.remove('active');
+            showView('landing');
+            // Reset everything
+            cart = [];
+            selectedDate = null;
+            selectedTime = null;
+            document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
+            document.getElementById('selectedDateLabel').textContent = '';
+            updateCartDisplay();
+            renderCalendar();
+        }
+        
+        document.getElementById('successModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+        
+        // Calendar Functions
+        function formatDateForICS(date, time) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            // Parse time (e.g., "11:00 AM" or "3:00 PM")
+            let hours = parseInt(time.split(':')[0]);
+            const isPM = time.includes('PM');
+            if (isPM && hours !== 12) hours += 12;
+            if (!isPM && hours === 12) hours = 0;
+            
+            const startHour = String(hours).padStart(2, '0');
+            const endHour = String(hours + 3).padStart(2, '0'); // 3 hour duration
+            
+            return {
+                start: `${year}${month}${day}T${startHour}0000`,
+                end: `${year}${month}${day}T${endHour}0000`
+            };
+        }
+        
+        function generateICSContent() {
+            let ics = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Woodlands Market//Demo Scheduling//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+`;
+            
+            cart.forEach((item, index) => {
+                const times = formatDateForICS(item.date, item.time);
+                const uid = `wm-demo-${Date.now()}-${index}@woodlandsmarket.com`;
+                
+                ics += `BEGIN:VEVENT
+DTSTART:${times.start}
+DTEND:${times.end}
+SUMMARY:Product Demo at Woodlands Market - ${item.location}
+LOCATION:Woodlands Market, ${item.location}, CA
+DESCRIPTION:3-hour product demonstration slot at Woodlands Market ${item.location}.
+UID:${uid}
+STATUS:CONFIRMED
+END:VEVENT
+`;
+            });
+            
+            ics += `END:VCALENDAR`;
+            return ics;
+        }
+        
+        function downloadICS() {
+            const icsContent = generateICSContent();
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'woodlands-market-demos.ics';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function addToGoogleCalendar() {
+            // For multiple events, we'll open the first one and user can download ICS for all
+            if (cart.length === 0) return;
+            
+            const item = cart[0];
+            const times = formatDateForICS(item.date, item.time);
+            
+            const title = encodeURIComponent(`Product Demo at Woodlands Market - ${item.location}`);
+            const location = encodeURIComponent(`Woodlands Market, ${item.location}, CA`);
+            const details = encodeURIComponent(`3-hour product demonstration slot at Woodlands Market ${item.location}.`);
+            const dates = `${times.start}/${times.end}`;
+            
+            const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&location=${location}&details=${details}`;
+            
+            if (cart.length > 1) {
+                alert('Google Calendar will open for your first booking. For multiple bookings, use "Download Calendar File" to add all events at once.');
+            }
+            
+            window.open(googleUrl, '_blank');
+        }
+        
+        function addToOutlookCalendar() {
+            if (cart.length === 0) return;
+            
+            const item = cart[0];
+            const times = formatDateForICS(item.date, item.time);
+            
+            // Format dates for Outlook (ISO format)
+            const startDate = item.date.toISOString().split('T')[0];
+            let hours = parseInt(item.time.split(':')[0]);
+            const isPM = item.time.includes('PM');
+            if (isPM && hours !== 12) hours += 12;
+            if (!isPM && hours === 12) hours = 0;
+            const startTime = String(hours).padStart(2, '0') + ':00:00';
+            const endTime = String(hours + 3).padStart(2, '0') + ':00:00';
+            
+            const title = encodeURIComponent(`Product Demo at Woodlands Market - ${item.location}`);
+            const location = encodeURIComponent(`Woodlands Market, ${item.location}, CA`);
+            const details = encodeURIComponent(`3-hour product demonstration slot at Woodlands Market ${item.location}.`);
+            
+            const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${startDate}T${startTime}&enddt=${startDate}T${endTime}&location=${location}&body=${details}`;
+            
+            if (cart.length > 1) {
+                alert('Outlook Calendar will open for your first booking. For multiple bookings, use "Download Calendar File" to add all events at once.');
+            }
+            
+            window.open(outlookUrl, '_blank');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmed | Woodlands Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-900: #0d1f12; --forest-800: #1a3a21; --forest-700: #234d2c;
+            --forest-600: #2d6339; --forest-500: #3d8249; --forest-400: #52a35f;
+            --forest-300: #7bc285; --forest-200: #a8dab0; --forest-100: #d4edda; --forest-50: #eef7f0;
+            --sand-100: #faf8f5; --sand-200: #f2ede6; --sand-300: #e8e0d5;
+            --bark-600: #5c483a; --bark-500: #7a6352;
+            --shadow-md: 0 4px 12px rgba(13,31,18,0.08);
+            --shadow-lg: 0 12px 40px rgba(13,31,18,0.12);
+            --radius-sm: 6px; --radius-md: 12px; --radius-lg: 20px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Source Sans 3', sans-serif; 
+            background: linear-gradient(135deg, var(--sand-100) 0%, var(--forest-50) 100%); 
+            color: var(--forest-900); 
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        h1, h2, h3, h4 { font-family: 'Fraunces', Georgia, serif; font-weight: 500; line-height: 1.2; }
+        
+        .container { 
+            background: white; 
+            border-radius: var(--radius-lg); 
+            box-shadow: var(--shadow-lg); 
+            max-width: 500px; 
+            width: 100%; 
+            padding: 48px 40px;
+            text-align: center;
+        }
+        
+        .success-icon { 
+            width: 80px; 
+            height: 80px; 
+            background: var(--forest-100); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto 24px; 
+        }
+        .success-icon svg { width: 40px; height: 40px; stroke: var(--forest-600); fill: none; stroke-width: 2; }
+        
+        h1 { font-size: 1.75rem; color: var(--forest-800); margin-bottom: 8px; }
+        .subtitle { color: var(--bark-500); margin-bottom: 32px; }
+        
+        .details-box { 
+            background: var(--sand-100); 
+            border-radius: var(--radius-md); 
+            padding: 24px; 
+            text-align: left; 
+            margin-bottom: 24px; 
+        }
+        .detail-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 10px 0; 
+            border-bottom: 1px solid var(--sand-200); 
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--bark-500); }
+        .detail-value { font-weight: 600; color: var(--forest-800); }
+        
+        .booking-item {
+            background: white;
+            border: 1px solid var(--sand-200);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-top: 12px;
+            text-align: left;
+        }
+        .booking-date { font-weight: 600; color: var(--forest-800); }
+        .booking-location { font-size: 0.9rem; color: var(--bark-500); }
+        
+        .calendar-buttons { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            margin-bottom: 24px; 
+        }
+        
+        .btn { 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 8px; 
+            padding: 12px 24px; 
+            border-radius: var(--radius-sm); 
+            font-size: 0.95rem; 
+            font-weight: 500; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            border: none; 
+            font-family: inherit; 
+            text-decoration: none;
+            width: 100%;
+        }
+        .btn-primary { background: var(--forest-600); color: white; }
+        .btn-primary:hover { background: var(--forest-700); }
+        .btn-secondary { background: white; color: var(--forest-700); border: 1px solid var(--sand-300); }
+        .btn-secondary:hover { background: var(--forest-50); border-color: var(--forest-300); }
+        .btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+        
+        .email-note {
+            background: var(--forest-50);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            color: var(--forest-700);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .email-note svg { width: 20px; height: 20px; stroke: var(--forest-600); fill: none; flex-shrink: 0; }
+        
+        .loading { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 16px; 
+            padding: 40px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--sand-200);
+            border-top-color: var(--forest-600);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .error { color: #c53030; }
+    </style>
+</head>
+<body>
+    <div class="container" id="content">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Confirming your booking...</p>
+        </div>
+    </div>
+
+    <script>
+        let bookingsData = [];
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session_id');
+            
+            if (!sessionId) {
+                showError('Invalid session');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/verify-payment/${sessionId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    bookingsData = data.bookings;
+                    showSuccess(data);
+                } else {
+                    showError(data.error || 'Payment verification failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Something went wrong. Please contact support.');
+            }
+        });
+        
+        function showSuccess(data) {
+            let bookingsHtml = '';
+            data.bookings.forEach(booking => {
+                bookingsHtml += `
+                    <div class="booking-item">
+                        <div class="booking-date">${booking.displayDate} • ${booking.time}</div>
+                        <div class="booking-location">Woodlands Market - ${booking.location}</div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('content').innerHTML = `
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <h1>Confirmed!</h1>
+                <p class="subtitle">Your demo booking has been confirmed.</p>
+                
+                <div class="email-note">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <span>Confirmation email sent to <strong>${data.customerEmail}</strong></span>
+                </div>
+                
+                <div class="details-box">
+                    <div class="detail-row">
+                        <span class="detail-label">Confirmation #</span>
+                        <span class="detail-value">${data.confirmationNumber}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Demos Booked</span>
+                        <span class="detail-value">${data.bookings.length}</span>
+                    </div>
+                    ${bookingsHtml}
+                </div>
+                
+                <p style="color: var(--bark-500); margin-bottom: 16px; font-size: 0.95rem;">Add to your calendar:</p>
+                <div class="calendar-buttons">
+                    <button class="btn btn-secondary" onclick="downloadICS()">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Download Calendar File (.ics)
+                    </button>
+                    <button class="btn btn-secondary" onclick="addToGoogle()">
+                        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+                        Add to Google Calendar
+                    </button>
+                    <button class="btn btn-secondary" onclick="addToOutlook()">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Add to Outlook Calendar
+                    </button>
+                </div>
+                
+                <a href="/" class="btn btn-primary">Done</a>
+            `;
+        }
+        
+        function showError(message) {
+            document.getElementById('content').innerHTML = `
+                <h1 class="error">Something went wrong</h1>
+                <p class="subtitle">${message}</p>
+                <a href="/" class="btn btn-primary" style="margin-top: 24px;">Go Back</a>
+            `;
+        }
+        
+        function formatDateForICS(dateStr, time) {
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            let hours = parseInt(time.split(':')[0]);
+            const isPM = time.includes('PM');
+            if (isPM && hours !== 12) hours += 12;
+            if (!isPM && hours === 12) hours = 0;
+            
+            const startHour = String(hours).padStart(2, '0');
+            const endHour = String(hours + 3).padStart(2, '0');
+            
+            return {
+                start: `${year}${month}${day}T${startHour}0000`,
+                end: `${year}${month}${day}T${endHour}0000`,
+                dateISO: `${year}-${month}-${day}`
+            };
+        }
+        
+        function downloadICS() {
+            let ics = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Woodlands Market//Demo Scheduling//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+`;
+            
+            bookingsData.forEach((item, index) => {
+                const times = formatDateForICS(item.date, item.time);
+                const uid = `wm-demo-${Date.now()}-${index}@woodlandsmarket.com`;
+                
+                ics += `BEGIN:VEVENT
+DTSTART:${times.start}
+DTEND:${times.end}
+SUMMARY:Product Demo at Woodlands Market - ${item.location}
+LOCATION:Woodlands Market, ${item.location}, CA
+DESCRIPTION:3-hour product demonstration slot.
+UID:${uid}
+STATUS:CONFIRMED
+END:VEVENT
+`;
+            });
+            
+            ics += `END:VCALENDAR`;
+            
+            const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'woodlands-market-demos.ics';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function addToGoogle() {
+            if (bookingsData.length === 0) return;
+            
+            const item = bookingsData[0];
+            const times = formatDateForICS(item.date, item.time);
+            
+            const title = encodeURIComponent(`Product Demo at Woodlands Market - ${item.location}`);
+            const location = encodeURIComponent(`Woodlands Market, ${item.location}, CA`);
+            const details = encodeURIComponent(`3-hour product demonstration slot.`);
+            const dates = `${times.start}/${times.end}`;
+            
+            const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&location=${location}&details=${details}`;
+            
+            if (bookingsData.length > 1) {
+                alert('Google Calendar will open for your first booking. Use "Download Calendar File" to add all events at once.');
+            }
+            
+            window.open(googleUrl, '_blank');
+        }
+        
+        function addToOutlook() {
+            if (bookingsData.length === 0) return;
+            
+            const item = bookingsData[0];
+            const times = formatDateForICS(item.date, item.time);
+            
+            let hours = parseInt(item.time.split(':')[0]);
+            const isPM = item.time.includes('PM');
+            if (isPM && hours !== 12) hours += 12;
+            if (!isPM && hours === 12) hours = 0;
+            const startTime = String(hours).padStart(2, '0') + ':00:00';
+            const endTime = String(hours + 3).padStart(2, '0') + ':00:00';
+            
+            const title = encodeURIComponent(`Product Demo at Woodlands Market - ${item.location}`);
+            const location = encodeURIComponent(`Woodlands Market, ${item.location}, CA`);
+            const details = encodeURIComponent(`3-hour product demonstration slot.`);
+            
+            const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${times.dateISO}T${startTime}&enddt=${times.dateISO}T${endTime}&location=${location}&body=${details}`;
+            
+            if (bookingsData.length > 1) {
+                alert('Outlook Calendar will open for your first booking. Use "Download Calendar File" to add all events at once.');
+            }
+            
+            window.open(outlookUrl, '_blank');
+        }
+    </script>
+</body>
+</html>
