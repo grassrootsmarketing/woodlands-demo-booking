@@ -26,15 +26,16 @@
         
         .landing { justify-content: flex-start; align-items: center; padding: 60px 40px; background: linear-gradient(135deg, var(--sand-100) 0%, var(--forest-50) 100%); overflow-y: auto; }
         .landing-content { text-align: center; max-width: 800px; }
-        .landing-logo { width: 80px; height: 80px; background: linear-gradient(135deg, var(--forest-600), var(--forest-700)); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: var(--shadow-lg); }
-        .landing-logo svg { width: 44px; height: 44px; fill: white; }
+        .landing-logo { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: var(--shadow-lg); overflow: hidden; }
+        .landing-logo svg { width: 80px; height: 80px; }
         .landing h1 { font-size: 2.5rem; color: var(--forest-800); margin-bottom: 8px; }
         .landing > .landing-content > p { color: var(--bark-500); font-size: 1.1rem; margin-bottom: 48px; }
         
         .location-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px; }
         .location-card { background: white; border-radius: var(--radius-md); padding: 32px; text-align: left; cursor: pointer; transition: all 0.3s; box-shadow: var(--shadow-md); border: 1px solid var(--sand-200); }
         .location-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--forest-300); }
-        .location-card-icon { width: 56px; height: 56px; background: linear-gradient(135deg, var(--forest-600), var(--forest-800)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 1.25rem; color: white; margin-bottom: 16px; }
+        .location-card-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; overflow: hidden; }
+        .location-card-icon svg { width: 56px; height: 56px; }
         .location-card h3 { font-size: 1.25rem; color: var(--forest-800); margin-bottom: 4px; }
         .location-card-location { display: flex; align-items: center; gap: 6px; color: var(--bark-500); font-size: 0.9rem; margin-bottom: 16px; }
         .location-card-location svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
@@ -49,8 +50,8 @@
         .header { background: white; border-bottom: 1px solid var(--sand-200); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .brand:hover .brand-icon { transform: scale(1.05); }
-        .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--forest-600), var(--forest-700)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
-        .brand-icon svg { width: 22px; height: 22px; fill: white; }
+        .brand-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; overflow: hidden; }
+        .brand-icon svg { width: 40px; height: 40px; }
         .brand-text h1 { font-size: 1.1rem; color: var(--forest-800); }
         .brand-text span { font-size: 0.8rem; color: var(--bark-500); }
         
@@ -107,7 +108,8 @@
         
         .summary-card { position: sticky; top: 0; }
         .store-info { display: flex; gap: 16px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--sand-200); }
-        .store-logo { width: 56px; height: 56px; background: linear-gradient(135deg, var(--forest-600), var(--forest-800)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 1.25rem; color: white; flex-shrink: 0; }
+        .store-logo { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+        .store-logo svg { width: 56px; height: 56px; }
         .store-details h4 { font-size: 1rem; color: var(--forest-800); margin-bottom: 2px; }
         .store-details p { font-size: 0.85rem; color: var(--bark-500); display: flex; align-items: center; gap: 4px; }
         .store-details svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
@@ -209,13 +211,13 @@
 <body>
     <div class="view landing active" id="landingView">
         <div class="landing-content">
-            <div class="landing-logo"><svg viewBox="0 0 24 24"><path d="M12 2L8 6H4v4l-4 4 4 4v4h4l4 4 4-4h4v-4l4-4-4-4V6h-4l-4-4z"/></svg></div>
+            <div class="landing-logo"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#1a1a1a"/><circle cx="100" cy="100" r="88" fill="none" stroke="white" stroke-width="6"/><circle cx="100" cy="100" r="76" fill="none" stroke="white" stroke-width="4"/><circle cx="100" cy="100" r="68" fill="#1a1a1a"/><text x="100" y="118" text-anchor="middle" font-family="Georgia,serif" font-size="80" font-weight="bold" fill="white">W</text></svg></div>
             <h1>Demo Scheduling Portal</h1>
             <p>Select a location to book your product demonstration</p>
             
             <div class="location-grid">
                 <div class="location-card" onclick="selectLocation('Kentfield')">
-                    <div class="location-card-icon">WM</div>
+                    <div class="location-card-icon"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#1a1a1a"/><circle cx="100" cy="100" r="88" fill="none" stroke="white" stroke-width="6"/><circle cx="100" cy="100" r="76" fill="none" stroke="white" stroke-width="4"/><circle cx="100" cy="100" r="68" fill="#1a1a1a"/><text x="100" y="118" text-anchor="middle" font-family="Georgia,serif" font-size="80" font-weight="bold" fill="white">W</text></svg></div>
                     <h3>Woodlands Market</h3>
                     <div class="location-card-location">
                         <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -228,7 +230,7 @@
                 </div>
                 
                 <div class="location-card" onclick="selectLocation('Tiburon')">
-                    <div class="location-card-icon">WM</div>
+                    <div class="location-card-icon"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#1a1a1a"/><circle cx="100" cy="100" r="88" fill="none" stroke="white" stroke-width="6"/><circle cx="100" cy="100" r="76" fill="none" stroke="white" stroke-width="4"/><circle cx="100" cy="100" r="68" fill="#1a1a1a"/><text x="100" y="118" text-anchor="middle" font-family="Georgia,serif" font-size="80" font-weight="bold" fill="white">W</text></svg></div>
                     <h3>Woodlands Market</h3>
                     <div class="location-card-location">
                         <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -241,7 +243,7 @@
                 </div>
                 
                 <div class="location-card" onclick="selectLocation('San Francisco')">
-                    <div class="location-card-icon">WM</div>
+                    <div class="location-card-icon"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#1a1a1a"/><circle cx="100" cy="100" r="88" fill="none" stroke="white" stroke-width="6"/><circle cx="100" cy="100" r="76" fill="none" stroke="white" stroke-width="4"/><circle cx="100" cy="100" r="68" fill="#1a1a1a"/><text x="100" y="118" text-anchor="middle" font-family="Georgia,serif" font-size="80" font-weight="bold" fill="white">W</text></svg></div>
                     <h3>Woodlands Market</h3>
                     <div class="location-card-location">
                         <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -264,7 +266,7 @@
     <div class="view" id="clientView">
         <header class="header">
             <div class="brand" onclick="showView('landing')">
-                <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 2L8 6H4v4l-4 4 4 4v4h4l4 4 4-4h4v-4l4-4-4-4V6h-4l-4-4z"/></svg></div>
+                <div class="brand-icon"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#1a1a1a"/><circle cx="100" cy="100" r="88" fill="none" stroke="white" stroke-width="6"/><circle cx="100" cy="100" r="76" fill="none" stroke="white" stroke-width="4"/><circle cx="100" cy="100" r="68" fill="#1a1a1a"/><text x="100" y="118" text-anchor="middle" font-family="Georgia,serif" font-size="80" font-weight="bold" fill="white">W</text></svg></div>
                 <div class="brand-text"><h1>Woodlands Market</h1><span id="headerLocation">Kentfield</span></div>
             </div>
             <div class="header-nav">
@@ -327,7 +329,7 @@
                         </div>
                         <div class="booking-card-body">
                             <div class="store-info">
-                                <div class="store-logo">WM</div>
+                                <div class="store-logo"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#1a1a1a"/><circle cx="100" cy="100" r="88" fill="none" stroke="white" stroke-width="6"/><circle cx="100" cy="100" r="76" fill="none" stroke="white" stroke-width="4"/><circle cx="100" cy="100" r="68" fill="#1a1a1a"/><text x="100" y="118" text-anchor="middle" font-family="Georgia,serif" font-size="80" font-weight="bold" fill="white">W</text></svg></div>
                                 <div class="store-details">
                                     <h4>Woodlands Market</h4>
                                     <p><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="summaryLocation">Kentfield, CA</span></p>
@@ -361,7 +363,7 @@
     <div class="view" id="adminView">
         <header class="header">
             <div class="brand" onclick="showView('landing')">
-                <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 2L8 6H4v4l-4 4 4 4v4h4l4 4 4-4h4v-4l4-4-4-4V6h-4l-4-4z"/></svg></div>
+                <div class="brand-icon"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#1a1a1a"/><circle cx="100" cy="100" r="88" fill="none" stroke="white" stroke-width="6"/><circle cx="100" cy="100" r="76" fill="none" stroke="white" stroke-width="4"/><circle cx="100" cy="100" r="68" fill="#1a1a1a"/><text x="100" y="118" text-anchor="middle" font-family="Georgia,serif" font-size="80" font-weight="bold" fill="white">W</text></svg></div>
                 <div class="brand-text"><h1>Woodlands Market</h1><span>Admin Dashboard</span></div>
             </div>
             <div class="header-nav">
