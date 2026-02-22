@@ -275,6 +275,190 @@ END:VEVENT
   return ics;
 }
 
+// ============================================================
+// ADMIN API ENDPOINTS
+// ============================================================
+
+// Simple admin auth middleware
+function adminAuth(req, res, next) {
+  const password = req.headers['x-admin-password'] || req.query.admin_password;
+  if (!process.env.ADMIN_PASSWORD) {
+    return res.status(500).json({ error: 'ADMIN_PASSWORD not configured' });
+  }
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Invalid admin password' });
+  }
+  next();
+}
+
+// Helper: extract bookings from Stripe session metadata
+function extractBookings(session) {
+  try {
+    let bookingsStr;
+    if (session.metadata.bookings) {
+      bookingsStr = session.metadata.bookings;
+    } else if (session.metadata.bookings_chunks) {
+      const chunks = parseInt(session.metadata.bookings_chunks);
+      bookingsStr = '';
+      for (let i = 0; i < chunks; i++) {
+        bookingsStr += session.metadata[`bookings_${i}`] || '';
+      }
+    }
+    return bookingsStr ? JSON.parse(bookingsStr) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+// GET /api/admin/bookings - List all bookings from Stripe
+app.get('/api/admin/bookings', adminAuth, async (req, res) => {
+  try {
+    const sessions = await stripe.checkout.sessions.list({
+      limit: 100,
+      expand: ['data.payment_intent'],
+    });
+
+    const bookings = sessions.data
+      .filter(s => s.payment_status === 'paid' && s.metadata.customerName)
+      .map(s => {
+        const refund = s.payment_intent?.charges?.data?.[0]?.refunded || false;
+        const refundAmount = s.payment_intent?.charges?.data?.[0]?.amount_refunded || 0;
+        return {
+          id: s.id,
+          paymentIntentId: s.payment_intent?.id || s.payment_intent,
+          customerName: s.metadata.customerName,
+          email: s.customer_email,
+          company: s.metadata.company,
+          product: s.metadata.product,
+          phone: s.metadata.phone,
+          bookings: extractBookings(s),
+          totalAmount: (s.amount_total / 100).toFixed(2),
+          createdAt: new Date(s.created * 1000).toISOString(),
+          status: refund ? 'refunded' : 'confirmed',
+          refundAmount: (refundAmount / 100).toFixed(2),
+        };
+      });
+
+    res.json({ bookings });
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/stats - Dashboard stats
+app.get('/api/admin/stats', adminAuth, async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startTimestamp = Math.floor(startOfMonth.getTime() / 1000);
+
+    const sessions = await stripe.checkout.sessions.list({
+      limit: 100,
+      created: { gte: startTimestamp },
+    });
+
+    const paidSessions = sessions.data.filter(s => s.payment_status === 'paid' && s.metadata.customerName);
+    let totalDemos = 0;
+    let totalRevenue = 0;
+
+    paidSessions.forEach(s => {
+      const bookings = extractBookings(s);
+      totalDemos += bookings.length;
+      totalRevenue += s.amount_total / 100;
+    });
+
+    res.json({
+      thisMonthDemos: totalDemos,
+      totalRevenue: totalRevenue.toFixed(2),
+      storeRevenue: (totalRevenue * 0.8).toFixed(2),
+      platformFee: (totalRevenue * 0.2).toFixed(2),
+      demoFee: '30.00',
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/admin/bookings/:sessionId/refund - Cancel & refund a booking
+app.post('/api/admin/bookings/:sessionId/refund', adminAuth, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['payment_intent'],
+    });
+
+    if (!session.payment_intent) {
+      return res.status(400).json({ error: 'No payment intent found for this session' });
+    }
+
+    const paymentIntentId = typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent.id;
+
+    // Check if already refunded
+    const charges = session.payment_intent?.charges?.data;
+    if (charges && charges[0]?.refunded) {
+      return res.status(400).json({ error: 'This booking has already been refunded' });
+    }
+
+    // Create full refund
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+    });
+
+    // Send cancellation email
+    try {
+      const bookings = extractBookings(session);
+      await resend.emails.send({
+        from: 'Woodlands Market <bookings@woodlandsmarket.com>',
+        to: [session.customer_email],
+        subject: 'Demo Booking Cancelled - Refund Issued',
+        html: `
+          <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="width: 60px; height: 60px; background: #fee2e2; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 28px;">✕</div>
+              <h1 style="color: #1a3a21; margin: 0 0 8px;">Booking Cancelled</h1>
+              <p style="color: #7a6352;">Your demo booking has been cancelled and a full refund has been issued.</p>
+            </div>
+            <div style="background: #faf8f5; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+              <p style="margin: 0;"><strong>Company:</strong> ${session.metadata.company}</p>
+              <p style="margin: 8px 0 0;"><strong>Refund Amount:</strong> $${(session.amount_total / 100).toFixed(2)}</p>
+              <p style="margin: 8px 0 0;"><strong>Refund ID:</strong> ${refund.id}</p>
+            </div>
+            <p style="color: #7a6352; font-size: 14px;">Refunds typically appear on your statement within 5-10 business days.</p>
+            <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e8e0d5; color: #7a6352; font-size: 14px;">
+              <p><strong>Woodlands Market</strong></p>
+            </div>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error('Error sending cancellation email:', emailError);
+    }
+
+    res.json({
+      success: true,
+      refundId: refund.id,
+      amount: (refund.amount / 100).toFixed(2),
+    });
+  } catch (error) {
+    console.error('Error refunding booking:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/admin/auth - Verify admin password
+app.post('/api/admin/auth', (req, res) => {
+  const { password } = req.body;
+  if (password === process.env.ADMIN_PASSWORD) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ error: 'Invalid password' });
+  }
+});
+
 // For local development
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3000;

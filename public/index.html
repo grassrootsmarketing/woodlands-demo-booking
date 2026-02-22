@@ -191,6 +191,8 @@
         .confirmation-booking { background: white; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; border: 1px solid var(--sand-200); }
         .confirmation-booking:last-child { margin-bottom: 0; }
         
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         @media (max-width: 900px) {
             .booking-layout { grid-template-columns: 1fr; }
             .summary-card { position: static; }
@@ -371,62 +373,104 @@
     </div>
 
     <div class="view" id="adminView">
-        <header class="header">
-            <div class="brand" onclick="showView('landing')">
-                <div class="brand-icon"><img src="/logo.png" alt="Woodlands Market" style="width:100%;height:100%;object-fit:cover;"></div>
-                <div class="brand-text"><h1>Woodlands Market</h1><span>Admin Dashboard</span></div>
+        <!-- Admin Login -->
+        <div id="adminLogin" style="display: flex; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, var(--sand-100) 0%, var(--forest-50) 100%);">
+            <div style="background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 48px 40px; max-width: 400px; width: 100%; text-align: center;">
+                <div style="width: 64px; height: 64px; border-radius: 50%; overflow: hidden; margin: 0 auto 20px;"><img src="/logo.png" alt="WM" style="width:100%;height:100%;object-fit:cover;"></div>
+                <h2 style="font-family: 'Fraunces', serif; color: var(--forest-800); margin-bottom: 4px;">Admin Dashboard</h2>
+                <p style="color: var(--bark-500); margin-bottom: 24px; font-size: 0.95rem;">Enter your password to continue</p>
+                <div class="form-group"><input type="password" class="form-input" id="adminPassword" placeholder="Admin password" style="text-align: center;" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+                <button class="btn btn-primary" onclick="adminLogin()" style="width: 100%; justify-content: center; margin-top: 8px;">Sign In</button>
+                <p id="adminLoginError" style="color: #c53030; font-size: 0.85rem; margin-top: 12px; display: none;"></p>
             </div>
-            <div class="header-nav">
-                <button onclick="showView('client')">Book Demo</button>
-                <button class="active">Admin</button>
-            </div>
-        </header>
-        <div class="main-scroll">
-            <div class="container">
-                <div class="page-header">
-                    <h2 class="page-title">Dashboard</h2>
-                    <p class="page-subtitle">Manage your demo schedule and view earnings</p>
+        </div>
+
+        <!-- Admin Dashboard (hidden until login) -->
+        <div id="adminDashboard" style="display: none; flex-direction: column; height: 100vh;">
+            <header class="header">
+                <div class="brand" onclick="showView('landing')">
+                    <div class="brand-icon"><img src="/logo.png" alt="Woodlands Market" style="width:100%;height:100%;object-fit:cover;"></div>
+                    <div class="brand-text"><h1>Woodlands Market</h1><span>Admin Dashboard</span></div>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-label">This Month's Demos</div><div class="stat-value">12</div><div class="stat-change">↑ 3 from last month</div></div>
-                    <div class="stat-card"><div class="stat-label">Your Revenue (80%)</div><div class="stat-value">$288</div><div class="stat-change">From $360 total</div></div>
-                    <div class="stat-card"><div class="stat-label">Platform Fee (20%)</div><div class="stat-value">$72</div></div>
-                    <div class="stat-card"><div class="stat-label">Demo Fee</div><div class="stat-value">$30</div></div>
+                <div class="header-nav">
+                    <button onclick="showView('client')">Book Demo</button>
+                    <button class="active">Admin</button>
+                    <button onclick="adminLogout()" style="color: #c53030; border-color: #fecaca;">Logout</button>
                 </div>
-                <div class="table-card" style="margin-bottom: 32px;">
-                    <div class="table-header"><h3 class="table-title">Upcoming Demos</h3></div>
-                    <table>
-                        <thead><tr><th>Date & Time</th><th>Company</th><th>Contact</th><th>Product</th><th>Status</th></tr></thead>
-                        <tbody>
-                            <tr><td>Feb 16, 2026 • 11:00 AM</td><td>Sunrise Foods</td><td>John Smith</td><td>Organic Granola Line</td><td><span class="status-badge status-confirmed">Confirmed</span></td></tr>
-                            <tr><td>Feb 18, 2026 • 3:00 PM</td><td>Bay Beverages</td><td>Sarah Chen</td><td>Cold Brew Coffee</td><td><span class="status-badge status-confirmed">Confirmed</span></td></tr>
-                            <tr><td>Feb 20, 2026 • 11:00 AM</td><td>Green Valley Farms</td><td>Mike Johnson</td><td>Plant-Based Cheese</td><td><span class="status-badge status-confirmed">Confirmed</span></td></tr>
-                            <tr><td>Feb 22, 2026 • 3:00 PM</td><td>Artisan Crackers Co</td><td>Lisa Wong</td><td>Sourdough Crackers</td><td><span class="status-badge status-confirmed">Confirmed</span></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="settings-grid">
-                    <div class="settings-card">
-                        <div class="settings-card-header"><h3>Availability</h3><button class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;">Edit</button></div>
-                        <div class="settings-card-body">
-                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Monday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
-                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Tuesday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
-                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Wednesday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
-                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Thursday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
-                            <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Friday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
-                            <div class="availability-day"><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label><span class="availability-day-name">Saturday</span><div class="availability-times">Closed</div></div>
-                            <div class="availability-day"><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label><span class="availability-day-name">Sunday</span><div class="availability-times">Closed</div></div>
+            </header>
+            <div class="main-scroll">
+                <div class="container">
+                    <div class="page-header">
+                        <h2 class="page-title">Dashboard</h2>
+                        <p class="page-subtitle">Manage your demo schedule and view earnings</p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="stat-label">This Month's Demos</div><div class="stat-value" id="statDemos">—</div></div>
+                        <div class="stat-card"><div class="stat-label">Your Revenue (80%)</div><div class="stat-value" id="statRevenue">—</div></div>
+                        <div class="stat-card"><div class="stat-label">Platform Fee (20%)</div><div class="stat-value" id="statFee">—</div></div>
+                        <div class="stat-card"><div class="stat-label">Demo Fee</div><div class="stat-value">$30</div></div>
+                    </div>
+                    <div class="table-card" style="margin-bottom: 32px;">
+                        <div class="table-header">
+                            <h3 class="table-title">All Bookings</h3>
+                            <button class="btn btn-secondary btn-small" onclick="loadAdminData()">
+                                <svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                                Refresh
+                            </button>
+                        </div>
+                        <div id="adminBookingsLoading" style="padding: 40px; text-align: center; color: var(--bark-500);">
+                            <div style="width:32px;height:32px;border:3px solid var(--sand-200);border-top-color:var(--forest-600);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>
+                            Loading bookings...
+                        </div>
+                        <div id="adminBookingsTable" style="display:none; overflow-x: auto;">
+                            <table>
+                                <thead><tr><th>Date</th><th>Company</th><th>Contact</th><th>Product</th><th>Location</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                                <tbody id="adminBookingsBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="adminBookingsEmpty" style="display:none; padding: 40px; text-align: center; color: var(--bark-500);">
+                            No bookings found yet.
                         </div>
                     </div>
-                    <div class="settings-card">
-                        <div class="settings-card-header"><h3>Settings</h3></div>
-                        <div class="settings-card-body">
-                            <div class="form-group"><label class="form-label">Demo Fee</label><input type="text" class="form-input" value="$30.00"></div>
-                            <div class="form-group"><label class="form-label">Demo Duration</label><input type="text" class="form-input" value="3 hours" disabled></div>
-                            <div class="form-group"><label class="form-label">Advance Booking</label><input type="text" class="form-input" value="14 days minimum" disabled></div>
-                            <div class="form-group"><label class="form-label">Calendar Sync</label><button class="btn btn-secondary" style="width: 100%; justify-content: center;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>Connect Outlook</button></div>
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header"><h3>Availability</h3></div>
+                            <div class="settings-card-body">
+                                <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Monday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                                <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Tuesday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                                <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Wednesday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                                <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Thursday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                                <div class="availability-day"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="availability-day-name">Friday</span><div class="availability-times">11:00 AM – 6:00 PM</div></div>
+                                <div class="availability-day"><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label><span class="availability-day-name">Saturday</span><div class="availability-times">Closed</div></div>
+                                <div class="availability-day"><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label><span class="availability-day-name">Sunday</span><div class="availability-times">Closed</div></div>
+                            </div>
+                        </div>
+                        <div class="settings-card">
+                            <div class="settings-card-header"><h3>Settings</h3></div>
+                            <div class="settings-card-body">
+                                <div class="form-group"><label class="form-label">Demo Fee</label><input type="text" class="form-input" value="$30.00" disabled></div>
+                                <div class="form-group"><label class="form-label">Demo Duration</label><input type="text" class="form-input" value="3 hours" disabled></div>
+                                <div class="form-group"><label class="form-label">Advance Booking</label><input type="text" class="form-input" value="14 days minimum" disabled></div>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Confirmation Modal -->
+    <div class="modal-overlay" id="refundModal">
+        <div class="modal" style="max-width: 420px;">
+            <div class="modal-body" style="padding: 32px;">
+                <div style="width: 56px; height: 56px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:#dc2626;fill:none;stroke-width:2;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <h3 style="font-size: 1.25rem; color: var(--forest-800); margin-bottom: 8px;">Cancel & Refund Booking?</h3>
+                <p id="refundModalText" style="color: var(--bark-500); margin-bottom: 24px; font-size: 0.95rem;"></p>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="closeRefundModal()" style="flex:1; justify-content: center;">Go Back</button>
+                    <button class="btn" id="refundConfirmBtn" onclick="confirmRefund()" style="flex:1; justify-content: center; background: #dc2626; color: white;">Refund</button>
                 </div>
             </div>
         </div>
@@ -816,6 +860,190 @@ END:VEVENT
             
             window.open(outlookUrl, '_blank');
         }
+
+        // ============================================================
+        // ADMIN PANEL
+        // ============================================================
+
+        let adminToken = sessionStorage.getItem('adminToken') || '';
+        let pendingRefundId = null;
+        let pendingRefundCompany = '';
+        let pendingRefundAmount = '';
+
+        function adminLogin() {
+            const password = document.getElementById('adminPassword').value;
+            const errorEl = document.getElementById('adminLoginError');
+            errorEl.style.display = 'none';
+
+            fetch('/api/admin/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    adminToken = password;
+                    sessionStorage.setItem('adminToken', password);
+                    document.getElementById('adminLogin').style.display = 'none';
+                    document.getElementById('adminDashboard').style.display = 'flex';
+                    loadAdminData();
+                } else {
+                    errorEl.textContent = 'Incorrect password';
+                    errorEl.style.display = 'block';
+                }
+            })
+            .catch(() => {
+                errorEl.textContent = 'Connection error. Try again.';
+                errorEl.style.display = 'block';
+            });
+        }
+
+        function adminLogout() {
+            adminToken = '';
+            sessionStorage.removeItem('adminToken');
+            document.getElementById('adminLogin').style.display = 'flex';
+            document.getElementById('adminDashboard').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+            showView('landing');
+        }
+
+        // Auto-login if token exists in session
+        function checkAdminSession() {
+            if (adminToken) {
+                fetch('/api/admin/stats', { headers: { 'x-admin-password': adminToken } })
+                .then(r => {
+                    if (r.ok) {
+                        document.getElementById('adminLogin').style.display = 'none';
+                        document.getElementById('adminDashboard').style.display = 'flex';
+                        loadAdminData();
+                    } else {
+                        sessionStorage.removeItem('adminToken');
+                        adminToken = '';
+                    }
+                })
+                .catch(() => {});
+            }
+        }
+
+        function loadAdminData() {
+            loadAdminStats();
+            loadAdminBookings();
+        }
+
+        function loadAdminStats() {
+            fetch('/api/admin/stats', { headers: { 'x-admin-password': adminToken } })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('statDemos').textContent = data.thisMonthDemos;
+                document.getElementById('statRevenue').textContent = '$' + data.storeRevenue;
+                document.getElementById('statFee').textContent = '$' + data.platformFee;
+            })
+            .catch(err => console.error('Stats error:', err));
+        }
+
+        function loadAdminBookings() {
+            const loading = document.getElementById('adminBookingsLoading');
+            const table = document.getElementById('adminBookingsTable');
+            const empty = document.getElementById('adminBookingsEmpty');
+            const tbody = document.getElementById('adminBookingsBody');
+
+            loading.style.display = 'block';
+            table.style.display = 'none';
+            empty.style.display = 'none';
+
+            fetch('/api/admin/bookings', { headers: { 'x-admin-password': adminToken } })
+            .then(r => r.json())
+            .then(data => {
+                loading.style.display = 'none';
+                if (!data.bookings || data.bookings.length === 0) {
+                    empty.style.display = 'block';
+                    return;
+                }
+                table.style.display = 'block';
+
+                tbody.innerHTML = data.bookings.map(booking => {
+                    const date = new Date(booking.createdAt);
+                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const locations = booking.bookings.map(b => b.location).filter((v,i,a) => a.indexOf(v) === i).join(', ');
+                    const demoDetails = booking.bookings.map(b => b.displayDate + ' ' + b.time).join(', ');
+                    const isRefunded = booking.status === 'refunded';
+
+                    const statusBadge = isRefunded
+                        ? '<span class="status-badge" style="background:#fee2e2;color:#dc2626;">Refunded</span>'
+                        : '<span class="status-badge status-confirmed">Confirmed</span>';
+
+                    const actionBtn = isRefunded
+                        ? '<span style="color:var(--bark-500);font-size:0.85rem;">Refunded $' + booking.refundAmount + '</span>'
+                        : '<button class="btn btn-small" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 12px;font-size:0.8rem;" onclick="showRefundModal(\'' + booking.id + '\',\'' + booking.company.replace(/'/g, "\\'") + '\',\'' + booking.totalAmount + '\')">Cancel & Refund</button>';
+
+                    return '<tr>' +
+                        '<td><div style="font-weight:600;">' + demoDetails + '</div><div style="font-size:0.8rem;color:var(--bark-500);">Booked ' + dateStr + '</div></td>' +
+                        '<td>' + booking.company + '</td>' +
+                        '<td><div>' + booking.customerName + '</div><div style="font-size:0.8rem;color:var(--bark-500);">' + booking.email + '</div></td>' +
+                        '<td>' + booking.product + '</td>' +
+                        '<td>' + locations + '</td>' +
+                        '<td>$' + booking.totalAmount + '</td>' +
+                        '<td>' + statusBadge + '</td>' +
+                        '<td>' + actionBtn + '</td>' +
+                    '</tr>';
+                }).join('');
+            })
+            .catch(err => {
+                loading.style.display = 'none';
+                empty.style.display = 'block';
+                empty.textContent = 'Error loading bookings: ' + err.message;
+            });
+        }
+
+        function showRefundModal(sessionId, company, amount) {
+            pendingRefundId = sessionId;
+            pendingRefundCompany = company;
+            pendingRefundAmount = amount;
+            document.getElementById('refundModalText').textContent =
+                'This will cancel the booking for ' + company + ' and issue a full refund of $' + amount + '. The customer will be notified by email. This cannot be undone.';
+            document.getElementById('refundModal').classList.add('active');
+        }
+
+        function closeRefundModal() {
+            document.getElementById('refundModal').classList.remove('active');
+            pendingRefundId = null;
+        }
+
+        function confirmRefund() {
+            if (!pendingRefundId) return;
+            const btn = document.getElementById('refundConfirmBtn');
+            btn.textContent = 'Processing...';
+            btn.disabled = true;
+
+            fetch('/api/admin/bookings/' + pendingRefundId + '/refund', {
+                method: 'POST',
+                headers: { 'x-admin-password': adminToken, 'Content-Type': 'application/json' },
+            })
+            .then(r => r.json())
+            .then(data => {
+                closeRefundModal();
+                btn.textContent = 'Refund';
+                btn.disabled = false;
+                if (data.success) {
+                    alert('Refund of $' + data.amount + ' issued successfully. The customer has been notified.');
+                    loadAdminData();
+                } else {
+                    alert('Refund failed: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                closeRefundModal();
+                btn.textContent = 'Refund';
+                btn.disabled = false;
+                alert('Error: ' + err.message);
+            });
+        }
+
+        document.getElementById('refundModal').addEventListener('click', function(e) { if (e.target === this) closeRefundModal(); });
+
+        // Check admin session on page load
+        document.addEventListener('DOMContentLoaded', function() { checkAdminSession(); });
     </script>
 </body>
 </html>
