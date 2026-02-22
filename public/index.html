@@ -406,9 +406,9 @@
                     </div>
                     <div class="stats-grid">
                         <div class="stat-card"><div class="stat-label">This Month's Demos</div><div class="stat-value" id="statDemos">—</div></div>
-                        <div class="stat-card"><div class="stat-label">Your Revenue (80%)</div><div class="stat-value" id="statRevenue">—</div></div>
-                        <div class="stat-card"><div class="stat-label">Platform Fee (20%)</div><div class="stat-value" id="statFee">—</div></div>
-                        <div class="stat-card"><div class="stat-label">Demo Fee</div><div class="stat-value">$30</div></div>
+                        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" id="statTotal">—</div></div>
+                        <div class="stat-card"><div class="stat-label">Woodlands Market ($20/demo)</div><div class="stat-value" id="statMarket">—</div></div>
+                        <div class="stat-card"><div class="stat-label">Grassroots ($10/demo)</div><div class="stat-value" id="statGrassroots">—</div></div>
                     </div>
                     <div class="table-card" style="margin-bottom: 32px;">
                         <div class="table-header">
@@ -424,7 +424,7 @@
                         </div>
                         <div id="adminBookingsTable" style="display:none; overflow-x: auto;">
                             <table>
-                                <thead><tr><th>Date</th><th>Company</th><th>Contact</th><th>Product</th><th>Location</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                                <thead><tr><th>Date</th><th>Company</th><th>Contact</th><th>Product</th><th>Location</th><th>Amount</th><th>Market</th><th>Grassroots</th><th>Status</th><th>Actions</th></tr></thead>
                                 <tbody id="adminBookingsBody"></tbody>
                             </table>
                         </div>
@@ -936,8 +936,9 @@ END:VEVENT
             .then(r => r.json())
             .then(data => {
                 document.getElementById('statDemos').textContent = data.thisMonthDemos;
-                document.getElementById('statRevenue').textContent = '$' + data.storeRevenue;
-                document.getElementById('statFee').textContent = '$' + data.platformFee;
+                document.getElementById('statTotal').textContent = '$' + data.totalRevenue;
+                document.getElementById('statMarket').textContent = '$' + data.marketShare;
+                document.getElementById('statGrassroots').textContent = '$' + data.grassrootsShare;
             })
             .catch(err => console.error('Stats error:', err));
         }
@@ -977,6 +978,10 @@ END:VEVENT
                         ? '<span style="color:var(--bark-500);font-size:0.85rem;">Refunded $' + booking.refundAmount + '</span>'
                         : '<button class="btn btn-small" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 12px;font-size:0.8rem;" onclick="showRefundModal(\'' + booking.id + '\',\'' + booking.company.replace(/'/g, "\\'") + '\',\'' + booking.totalAmount + '\')">Cancel & Refund</button>';
 
+                    const numDemos = booking.bookings.length;
+                    const marketCut = (numDemos * 20).toFixed(2);
+                    const grassrootsCut = (numDemos * 10).toFixed(2);
+
                     return '<tr>' +
                         '<td><div style="font-weight:600;">' + demoDetails + '</div><div style="font-size:0.8rem;color:var(--bark-500);">Booked ' + dateStr + '</div></td>' +
                         '<td>' + booking.company + '</td>' +
@@ -984,6 +989,8 @@ END:VEVENT
                         '<td>' + booking.product + '</td>' +
                         '<td>' + locations + '</td>' +
                         '<td>$' + booking.totalAmount + '</td>' +
+                        '<td style="color:var(--forest-700);font-weight:600;">$' + marketCut + '</td>' +
+                        '<td style="color:var(--bark-600);font-weight:600;">$' + grassrootsCut + '</td>' +
                         '<td>' + statusBadge + '</td>' +
                         '<td>' + actionBtn + '</td>' +
                     '</tr>';

@@ -368,12 +368,18 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       totalRevenue += s.amount_total / 100;
     });
 
+    // Revenue split: $20/demo to Woodlands Market, $10/demo to Grassroots
+    const marketShare = totalDemos * 20;
+    const grassrootsShare = totalDemos * 10;
+
     res.json({
       thisMonthDemos: totalDemos,
       totalRevenue: totalRevenue.toFixed(2),
-      storeRevenue: (totalRevenue * 0.8).toFixed(2),
-      platformFee: (totalRevenue * 0.2).toFixed(2),
+      marketShare: marketShare.toFixed(2),
+      grassrootsShare: grassrootsShare.toFixed(2),
       demoFee: '30.00',
+      marketPerDemo: '20.00',
+      grassrootsPerDemo: '10.00',
     });
   } catch (error) {
     console.error('Error fetching stats:', error);
