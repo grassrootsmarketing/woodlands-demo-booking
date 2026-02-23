@@ -387,6 +387,136 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
   }
 });
 
+// GET /api/admin/analytics - Full analytics data
+app.get('/api/admin/analytics', adminAuth, async (req, res) => {
+  try {
+    // Fetch all sessions (paginate up to 300)
+    let allSessions = [];
+    let hasMore = true;
+    let startingAfter = null;
+    while (hasMore && allSessions.length < 300) {
+      const params = { limit: 100, expand: ['data.payment_intent'] };
+      if (startingAfter) params.starting_after = startingAfter;
+      const batch = await stripe.checkout.sessions.list(params);
+      allSessions = allSessions.concat(batch.data);
+      hasMore = batch.has_more;
+      if (batch.data.length > 0) startingAfter = batch.data[batch.data.length - 1].id;
+    }
+
+    const paid = allSessions.filter(s => s.payment_status === 'paid' && s.metadata.customerName);
+    const notRefunded = paid.filter(s => {
+      const refunded = s.payment_intent?.charges?.data?.[0]?.refunded || false;
+      return !refunded;
+    });
+
+    // Monthly revenue (last 6 months)
+    const monthlyData = {};
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      monthlyData[key] = { revenue: 0, demos: 0, market: 0, grassroots: 0 };
+    }
+    notRefunded.forEach(s => {
+      const created = new Date(s.created * 1000);
+      const key = created.getFullYear() + '-' + String(created.getMonth() + 1).padStart(2, '0');
+      if (monthlyData[key]) {
+        const bookings = extractBookings(s);
+        const numDemos = bookings.length;
+        monthlyData[key].revenue += s.amount_total / 100;
+        monthlyData[key].demos += numDemos;
+        monthlyData[key].market += numDemos * 20;
+        monthlyData[key].grassroots += numDemos * 10;
+      }
+    });
+
+    // Location breakdown
+    const locationData = {};
+    notRefunded.forEach(s => {
+      const bookings = extractBookings(s);
+      bookings.forEach(b => {
+        const loc = b.location || 'Unknown';
+        if (!locationData[loc]) locationData[loc] = { demos: 0, revenue: 0 };
+        locationData[loc].demos++;
+        locationData[loc].revenue += 30;
+      });
+    });
+
+    // Popular time slots
+    const timeData = { '11:00 AM': 0, '3:00 PM': 0 };
+    notRefunded.forEach(s => {
+      const bookings = extractBookings(s);
+      bookings.forEach(b => {
+        if (timeData[b.time] !== undefined) timeData[b.time]++;
+        else timeData[b.time] = 1;
+      });
+    });
+
+    // Popular days of week
+    const dayData = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    notRefunded.forEach(s => {
+      const bookings = extractBookings(s);
+      bookings.forEach(b => {
+        if (b.date) {
+          const d = new Date(b.date);
+          const dayName = dayNames[d.getDay()];
+          if (dayData[dayName] !== undefined) dayData[dayName]++;
+        }
+      });
+    });
+
+    // Customer insights
+    const customers = {};
+    paid.forEach(s => {
+      const email = s.customer_email;
+      const refunded = s.payment_intent?.charges?.data?.[0]?.refunded || false;
+      if (!customers[email]) {
+        customers[email] = {
+          name: s.metadata.customerName,
+          email: email,
+          company: s.metadata.company,
+          bookings: 0,
+          totalSpent: 0,
+          firstBooking: s.created,
+          lastBooking: s.created,
+          products: new Set(),
+        };
+      }
+      const bookings = extractBookings(s);
+      customers[email].bookings += bookings.length;
+      if (!refunded) customers[email].totalSpent += s.amount_total / 100;
+      if (s.created < customers[email].firstBooking) customers[email].firstBooking = s.created;
+      if (s.created > customers[email].lastBooking) customers[email].lastBooking = s.created;
+      if (s.metadata.product) customers[email].products.add(s.metadata.product);
+      // Update name/company to latest
+      customers[email].name = s.metadata.customerName;
+      customers[email].company = s.metadata.company;
+    });
+
+    const customerList = Object.values(customers).map(c => ({
+      ...c,
+      products: Array.from(c.products),
+      firstBooking: new Date(c.firstBooking * 1000).toISOString(),
+      lastBooking: new Date(c.lastBooking * 1000).toISOString(),
+      isRepeat: c.bookings > 1,
+    })).sort((a, b) => b.bookings - a.bookings);
+
+    res.json({
+      monthly: monthlyData,
+      locations: locationData,
+      timeSlots: timeData,
+      popularDays: dayData,
+      customers: customerList,
+      totalCustomers: customerList.length,
+      repeatCustomers: customerList.filter(c => c.isRepeat).length,
+    });
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // POST /api/admin/bookings/:sessionId/refund - Cancel & refund a booking
 app.post('/api/admin/bookings/:sessionId/refund', adminAuth, async (req, res) => {
   try {

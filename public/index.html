@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demo Scheduling Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         :root {
             --forest-900: #0d1f12; --forest-800: #1a3a21; --forest-700: #234d2c;
@@ -191,6 +192,29 @@
         .confirmation-booking { background: white; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; border: 1px solid var(--sand-200); }
         .confirmation-booking:last-child { margin-bottom: 0; }
         
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px; }
+        .chart-card { background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--sand-200); overflow: hidden; }
+        .chart-card-header { padding: 16px 24px; border-bottom: 1px solid var(--sand-200); display: flex; justify-content: space-between; align-items: center; }
+        .chart-card-header h3 { font-family: 'Fraunces', serif; font-size: 1rem; color: var(--forest-800); }
+        .chart-card-body { padding: 20px 24px; }
+        .mini-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+
+        .search-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 0; padding: 16px 24px; border-bottom: 1px solid var(--sand-200); }
+        .search-input { flex: 1; padding: 8px 14px; border: 1px solid var(--sand-300); border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit; }
+        .search-input:focus { outline: none; border-color: var(--forest-500); box-shadow: 0 0 0 3px rgba(61,130,73,0.1); }
+        .filter-select { padding: 8px 14px; border: 1px solid var(--sand-300); border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit; background: white; cursor: pointer; }
+
+        .customer-card { background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--sand-200); overflow: hidden; margin-bottom: 32px; }
+        .customer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; padding: 24px; }
+        .customer-item { border: 1px solid var(--sand-200); border-radius: var(--radius-sm); padding: 16px; transition: all 0.2s; }
+        .customer-item:hover { border-color: var(--forest-300); background: var(--forest-50); }
+        .customer-item.repeat { border-left: 3px solid var(--forest-500); }
+        .customer-name { font-weight: 600; color: var(--forest-800); font-size: 0.95rem; }
+        .customer-company { font-size: 0.85rem; color: var(--bark-500); }
+        .customer-meta { display: flex; gap: 16px; margin-top: 8px; font-size: 0.8rem; color: var(--bark-500); }
+        .customer-meta span { display: flex; align-items: center; gap: 4px; }
+        .repeat-badge { display: inline-block; background: var(--forest-100); color: var(--forest-700); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-left: 8px; }
+
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 900px) {
@@ -199,6 +223,9 @@
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .settings-grid { grid-template-columns: 1fr; }
             .location-grid { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .mini-charts { grid-template-columns: 1fr; }
+            .search-bar { flex-wrap: wrap; }
         }
         @media (max-width: 600px) {
             .header { padding: 12px 16px; }
@@ -410,13 +437,68 @@
                         <div class="stat-card"><div class="stat-label">Woodlands Market ($20/demo)</div><div class="stat-value" id="statMarket">—</div></div>
                         <div class="stat-card"><div class="stat-label">Grassroots ($10/demo)</div><div class="stat-value" id="statGrassroots">—</div></div>
                     </div>
+                    <!-- Charts Section -->
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-card-header"><h3>Monthly Revenue</h3></div>
+                            <div class="chart-card-body"><canvas id="revenueChart" height="220"></canvas></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-card-header"><h3>By Location</h3></div>
+                            <div class="chart-card-body"><canvas id="locationChart" height="220"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="mini-charts">
+                        <div class="chart-card">
+                            <div class="chart-card-header"><h3>Popular Days</h3></div>
+                            <div class="chart-card-body"><canvas id="daysChart" height="160"></canvas></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-card-header"><h3>Time Slots</h3></div>
+                            <div class="chart-card-body"><canvas id="timesChart" height="160"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Insights -->
+                    <div class="customer-card">
+                        <div class="table-header">
+                            <h3 class="table-title">Customer Insights</h3>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <span id="customerSummary" style="font-size:0.85rem;color:var(--bark-500);"></span>
+                            </div>
+                        </div>
+                        <div id="customerGrid" class="customer-grid">
+                            <div style="text-align:center;color:var(--bark-500);grid-column:1/-1;padding:20px;">Loading customers...</div>
+                        </div>
+                    </div>
+
                     <div class="table-card" style="margin-bottom: 32px;">
                         <div class="table-header">
                             <h3 class="table-title">All Bookings</h3>
-                            <button class="btn btn-secondary btn-small" onclick="loadAdminData()">
-                                <svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                                Refresh
-                            </button>
+                            <div style="display:flex;gap:8px;">
+                                <button class="btn btn-secondary btn-small" onclick="exportCSV()">
+                                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Export CSV
+                                </button>
+                                <button class="btn btn-secondary btn-small" onclick="loadAdminData()">
+                                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="search-bar">
+                            <input type="text" class="search-input" id="bookingSearch" placeholder="Search by company, name, email, or product..." oninput="filterBookings()">
+                            <select class="filter-select" id="statusFilter" onchange="filterBookings()">
+                                <option value="all">All Status</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="refunded">Refunded</option>
+                            </select>
+                            <select class="filter-select" id="locationFilter" onchange="filterBookings()">
+                                <option value="all">All Locations</option>
+                                <option value="Kentfield">Kentfield</option>
+                                <option value="Tiburon">Tiburon</option>
+                                <option value="San Francisco">San Francisco</option>
+                            </select>
                         </div>
                         <div id="adminBookingsLoading" style="padding: 40px; text-align: center; color: var(--bark-500);">
                             <div style="width:32px;height:32px;border:3px solid var(--sand-200);border-top-color:var(--forest-600);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>
@@ -926,11 +1008,6 @@ END:VEVENT
             }
         }
 
-        function loadAdminData() {
-            loadAdminStats();
-            loadAdminBookings();
-        }
-
         function loadAdminStats() {
             fetch('/api/admin/stats', { headers: { 'x-admin-password': adminToken } })
             .then(r => r.json())
@@ -1048,6 +1125,289 @@ END:VEVENT
         }
 
         document.getElementById('refundModal').addEventListener('click', function(e) { if (e.target === this) closeRefundModal(); });
+
+        // ============================================================
+        // ANALYTICS & CHARTS
+        // ============================================================
+
+        let revenueChartInstance = null;
+        let locationChartInstance = null;
+        let daysChartInstance = null;
+        let timesChartInstance = null;
+        let allBookingsData = []; // Store for filtering
+
+        function loadAnalytics() {
+            fetch('/api/admin/analytics', { headers: { 'x-admin-password': adminToken } })
+            .then(r => r.json())
+            .then(data => {
+                renderRevenueChart(data.monthly);
+                renderLocationChart(data.locations);
+                renderDaysChart(data.popularDays);
+                renderTimesChart(data.timeSlots);
+                renderCustomerInsights(data.customers, data.totalCustomers, data.repeatCustomers);
+            })
+            .catch(err => console.error('Analytics error:', err));
+        }
+
+        function renderRevenueChart(monthly) {
+            const ctx = document.getElementById('revenueChart');
+            if (revenueChartInstance) revenueChartInstance.destroy();
+
+            const labels = Object.keys(monthly).map(k => {
+                const [y, m] = k.split('-');
+                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return months[parseInt(m) - 1] + ' ' + y;
+            });
+
+            revenueChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Market ($20/demo)',
+                            data: Object.values(monthly).map(m => m.market),
+                            backgroundColor: '#2d6339',
+                            borderRadius: 4,
+                            barPercentage: 0.7,
+                        },
+                        {
+                            label: 'Grassroots ($10/demo)',
+                            data: Object.values(monthly).map(m => m.grassroots),
+                            backgroundColor: '#7bc285',
+                            borderRadius: 4,
+                            barPercentage: 0.7,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: "'Source Sans 3'" }, usePointStyle: true, pointStyle: 'rectRounded' } },
+                        tooltip: {
+                            callbacks: {
+                                afterBody: function(items) {
+                                    const idx = items[0].dataIndex;
+                                    const vals = Object.values(monthly);
+                                    return 'Demos: ' + vals[idx].demos + '\nTotal: $' + vals[idx].revenue.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: v => '$' + v }, grid: { color: '#f2ede6' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderLocationChart(locations) {
+            const ctx = document.getElementById('locationChart');
+            if (locationChartInstance) locationChartInstance.destroy();
+
+            const labels = Object.keys(locations);
+            const values = labels.map(l => locations[l].demos);
+            const colors = ['#2d6339', '#3d8249', '#52a35f', '#7bc285'];
+
+            locationChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 0,
+                        hoverOffset: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: "'Source Sans 3'" }, padding: 16, usePointStyle: true } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(item) {
+                                    const loc = labels[item.dataIndex];
+                                    return loc + ': ' + values[item.dataIndex] + ' demos ($' + locations[loc].revenue + ')';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDaysChart(days) {
+            const ctx = document.getElementById('daysChart');
+            if (daysChartInstance) daysChartInstance.destroy();
+
+            const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+            const values = labels.map(d => days[d] || 0);
+
+            daysChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: values.map(v => v === Math.max(...values) ? '#2d6339' : '#a8dab0'),
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f2ede6' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderTimesChart(times) {
+            const ctx = document.getElementById('timesChart');
+            if (timesChartInstance) timesChartInstance.destroy();
+
+            const labels = Object.keys(times);
+            const values = Object.values(times);
+            const colors = ['#2d6339', '#52a35f', '#7bc285', '#a8dab0'];
+
+            timesChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.map(t => t + ' slot'),
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '55%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: "'Source Sans 3'" }, padding: 12, usePointStyle: true } }
+                    }
+                }
+            });
+        }
+
+        // ============================================================
+        // CUSTOMER INSIGHTS
+        // ============================================================
+
+        function renderCustomerInsights(customers, total, repeats) {
+            document.getElementById('customerSummary').textContent =
+                total + ' total customers • ' + repeats + ' repeat';
+
+            const grid = document.getElementById('customerGrid');
+            if (!customers || customers.length === 0) {
+                grid.innerHTML = '<div style="text-align:center;color:var(--bark-500);grid-column:1/-1;padding:20px;">No customers yet.</div>';
+                return;
+            }
+
+            grid.innerHTML = customers.map(c => {
+                const lastDate = new Date(c.lastBooking).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const repeatBadge = c.isRepeat ? '<span class="repeat-badge">Repeat</span>' : '';
+                return '<div class="customer-item' + (c.isRepeat ? ' repeat' : '') + '">' +
+                    '<div><span class="customer-name">' + c.name + '</span>' + repeatBadge + '</div>' +
+                    '<div class="customer-company">' + c.company + ' • ' + c.email + '</div>' +
+                    '<div class="customer-meta">' +
+                        '<span>' + c.bookings + ' demo' + (c.bookings !== 1 ? 's' : '') + '</span>' +
+                        '<span>$' + c.totalSpent.toFixed(2) + ' spent</span>' +
+                        '<span>Last: ' + lastDate + '</span>' +
+                    '</div>' +
+                    (c.products.length > 0 ? '<div style="margin-top:6px;font-size:0.8rem;color:var(--bark-500);">Products: ' + c.products.join(', ') + '</div>' : '') +
+                '</div>';
+            }).join('');
+        }
+
+        // ============================================================
+        // SEARCH & FILTER
+        // ============================================================
+
+        function filterBookings() {
+            const search = document.getElementById('bookingSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const locationFilter = document.getElementById('locationFilter').value;
+
+            const rows = document.querySelectorAll('#adminBookingsBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const matchesSearch = !search || text.includes(search);
+                const matchesStatus = statusFilter === 'all' || text.includes(statusFilter);
+                const matchesLocation = locationFilter === 'all' || text.includes(locationFilter.toLowerCase());
+                row.style.display = (matchesSearch && matchesStatus && matchesLocation) ? '' : 'none';
+            });
+        }
+
+        // ============================================================
+        // CSV EXPORT
+        // ============================================================
+
+        function exportCSV() {
+            fetch('/api/admin/bookings', { headers: { 'x-admin-password': adminToken } })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.bookings || data.bookings.length === 0) {
+                    alert('No bookings to export.');
+                    return;
+                }
+
+                const rows = [['Booked Date', 'Company', 'Contact Name', 'Email', 'Phone', 'Product', 'Demo Date', 'Time', 'Location', 'Total Amount', 'Market Share', 'Grassroots Share', 'Status']];
+
+                data.bookings.forEach(b => {
+                    if (b.bookings.length === 0) {
+                        rows.push([
+                            new Date(b.createdAt).toLocaleDateString(),
+                            '"' + b.company + '"', '"' + b.customerName + '"', b.email, b.phone || '',
+                            '"' + b.product + '"', '', '', '',
+                            '$' + b.totalAmount,
+                            '$' + (b.bookings.length * 20).toFixed(2),
+                            '$' + (b.bookings.length * 10).toFixed(2),
+                            b.status
+                        ]);
+                    } else {
+                        b.bookings.forEach((demo, i) => {
+                            rows.push([
+                                new Date(b.createdAt).toLocaleDateString(),
+                                '"' + b.company + '"', '"' + b.customerName + '"', b.email, b.phone || '',
+                                '"' + b.product + '"',
+                                demo.displayDate || '', demo.time || '', demo.location || '',
+                                i === 0 ? '$' + b.totalAmount : '',
+                                i === 0 ? '$' + (b.bookings.length * 20).toFixed(2) : '',
+                                i === 0 ? '$' + (b.bookings.length * 10).toFixed(2) : '',
+                                b.status
+                            ]);
+                        });
+                    }
+                });
+
+                const csv = rows.map(r => r.join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'woodlands-bookings-' + new Date().toISOString().split('T')[0] + '.csv';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch(err => alert('Export error: ' + err.message));
+        }
+
+        // Update loadAdminData to also load analytics
+        function loadAdminData() {
+            loadAdminStats();
+            loadAdminBookings();
+            loadAnalytics();
+        }
 
         // Check admin session on page load
         document.addEventListener('DOMContentLoaded', function() { checkAdminSession(); });
